@@ -18,7 +18,7 @@ var fs = require('fs');
     if (typeof count !== 'number') {
       count = 0;
     } else {
-      new_user = user + String.prototype.substr.call(count, 0);
+      new_user = user + count;
     }
 
     if (users.hasOwnProperty(new_user)) {
@@ -41,11 +41,21 @@ io.sockets.on('connection', function (socket) {
     ],
     q_index = 0;
   socket.on('join', function(data) {
+    if (data.hasOwnProperty('user')) {
+      var user = data.user;
+      if (users.hasOwnProperty(user)) {
+        socket.emit('let in', { user: { name: user, points: users[user].points }});
+      } else {
+        socket.emit('no let in', {});
+      }
+    }
+  });
+  socket.on('new', function(data) {
     var user = get_valid_user(data.user);
     users[user] = {
       points: 0
     };
-    socket.emit('let in', { user: user });
+    socket.emit('let in', { user: { name: user, points: 0 }});
   });
   socket.on('answer', function(data) {
     if (!curr_q_ans && data.hasOwnProperty('answer') && data.hasOwnProperty('user')) {

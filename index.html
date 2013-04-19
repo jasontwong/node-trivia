@@ -8,7 +8,9 @@
       $(function() {
         var socket = io.connect('http://localhost'),
         login = $('#login'),
+        new_user = $('#new'),
         game = $('#game'),
+        errors = $('.errors'),
         user = { name: '', points: 0 };
         game
           .on({
@@ -22,18 +24,34 @@
           .on({
             submit: function(e) {
               e.preventDefault();
-              var name = $('input', login).val();
+              var name = $('input', this).val();
               if (name.length) {
                 socket.emit('join', { user: name });
               }
               return false;
             }
           });
+        $('form', new_user)
+          .on({
+            submit: function(e) {
+              e.preventDefault();
+              var name = $('input', this).val();
+              if (name.length) {
+                socket.emit('new', { user: name });
+              }
+              return false;
+            }
+          });
+        socket.on('no let in', function(data) {
+          errors.text("user doesn't exist");
+        });
         socket.on('let in', function(data) {
+          errors.text('');
           if (data.hasOwnProperty('user')) {
             var game_form = $('form', game);
-            user.name = data.user;
+            user = data.user;
             login.hide();
+            new_user.hide();
             game.show();
             game.trigger({
               type: 'update_points',
@@ -54,7 +72,7 @@
               if (data.hasOwnProperty('question')) {
                 $('.question span', game).text(data.question);
                 $('input', game_form).remove();
-                $('.message', game).text();
+                $('.message', game).text('');
                 game_form
                   .prepend($('<input type="text" />'))
                   .show();
@@ -83,10 +101,17 @@
     </script>
   </head>
   <body>
+    <p class="errors"></p>
     <div id="login">
       <form action="/" method="post">
         <input type="text" name="login" />
         <button>Join</button>
+      </form>
+    </div>
+    <div id="new">
+      <form action="/" method="post">
+        <input type="text" name="new" />
+        <button>Create &amp; Join</button>
       </form>
     </div>
     <div id="game" style="display: none;">
