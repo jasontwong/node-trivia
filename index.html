@@ -11,6 +11,7 @@
           login = $('#login'),
           new_user = $('#new'),
           game = $('#game'),
+          chat = $('#chat'),
           errors = $('.errors'),
           user = { name: '', points: 0 };
         game
@@ -68,10 +69,24 @@
             user = data.user;
             login.hide();
             new_user.hide();
+            chat.show();
             game.show();
             game.trigger({
               type: 'update_points',
               points: user.points
+            });
+          $('form', chat)
+            .on({
+              submit: function(e) {
+                e.preventDefault();
+                var input = $('input', this),
+                  text = input.val();
+                if (text.length) {
+                  socket.emit('chat send', { text: text, user: user.name });
+                  input.val('');
+                }
+                return false;
+              }
             });
             game_form
               .on({
@@ -84,6 +99,23 @@
                   return false;
                 }
               });
+            socket.on('chat update', function(data) {
+              var box = $('textarea', chat),
+                text = box.text(),
+                i;
+              if (data.hasOwnProperty('log')) {
+                text = '';
+                for (i in data.log) {
+                  if (data.log.hasOwnProperty(i)) {
+                    text = text + "\n" + data.log[i];
+                  }
+                }
+              }
+              if (data.hasOwnProperty('line')) {
+                text = text + "\n" + data.line;
+              }
+              box.text(text);
+            });
             socket.on('question', function(data) {
               if (data.hasOwnProperty('question')) {
                 $('.question span', game).text(data.question);
@@ -137,6 +169,14 @@
         <button>Answer</button>
       </form>
       <p class="message"></p>
+    </div>
+    <div id="chat" style="display: none;">
+      <h2>Chat here:</h2>
+      <textarea disabled="disabled"></textarea>
+      <form action="/" method="post">
+        <input type="text" />
+        <button>Send</button>
+      </form>
     </div>
     <div id="leaderboards">
       <h2>Leaderboards</h2>
