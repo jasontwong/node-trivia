@@ -1,2 +1,3 @@
 - Refactor socket connections to store current user so it doens't have to be passed from client
 - Change answer field so that it disables and replaces instead of removing/adding
+- Add mocha testing
