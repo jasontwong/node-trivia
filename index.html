@@ -6,7 +6,7 @@
     <script>
     (function($) {
       $(function() {
-        var socket = io.connect('http://localhost'),
+        var socket = io.connect(document.URL),
         login = $('#login'),
         new_user = $('#new'),
         game = $('#game'),
