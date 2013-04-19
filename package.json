@@ -1,0 +1,14 @@
+{
+  "name": "node-trivia",
+  "subdomain": "node-trivia",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "version": "0.0.0-1",
+  "engines": {
+    "node": "0.8.x"
+  },
+  "dependencies": {
+    "socket.io": "0.9.14"
+  }
+}
