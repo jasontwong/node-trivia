@@ -7,11 +7,12 @@
     (function($) {
       $(function() {
         var socket = io.connect(document.URL),
-        login = $('#login'),
-        new_user = $('#new'),
-        game = $('#game'),
-        errors = $('.errors'),
-        user = { name: '', points: 0 };
+          boards = $('#leaderboards'),
+          login = $('#login'),
+          new_user = $('#new'),
+          game = $('#game'),
+          errors = $('.errors'),
+          user = { name: '', points: 0 };
         game
           .on({
             update_points: function(e) {
@@ -42,6 +43,21 @@
               return false;
             }
           });
+        socket.on('leaderboards', function(data) {
+          if (data.hasOwnProperty('users')) {
+            var list = $('ul', boards), 
+              new_list = $('<ul />'),
+              i, user;
+           
+            for (i in data.users) {
+              if (data.users.hasOwnProperty(i)) {
+                user = data.users[i];
+                new_list.append($('<li />').text(user.name + ' - ' + user.points + ' points'));
+              }
+            }
+            list.replaceWith(new_list);
+          }
+        });
         socket.on('no let in', function(data) {
           errors.text("user doesn't exist");
         });
@@ -121,6 +137,10 @@
         <button>Answer</button>
       </form>
       <p class="message"></p>
+    </div>
+    <div id="leaderboards">
+      <h2>Leaderboards</h2>
+      <ul></ul>
     </div>
   </body>
 </html>

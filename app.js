@@ -59,11 +59,27 @@ io.sockets.on('connection', function (socket) {
   });
   socket.on('answer', function(data) {
     if (!curr_q_ans && data.hasOwnProperty('answer') && data.hasOwnProperty('user')) {
-      var user = data.user;
+      var user = data.user,
+        new_users = [],
+        i;
       if (qanda[q_index].answer === parseInt(data.answer, 10)) {
         if (users.hasOwnProperty(user)) {
           curr_q_ans = true;
           socket.emit('update_points', { user: user, points: ++users[user].points, msg: "You're too slow" });
+          for (i in users) {
+            if (users.hasOwnProperty(i)) {
+              new_users.push({ name: i, points: users[i].points });
+            }
+          }
+          io.sockets.emit('leaderboards', { users: new_users.sort(function(a, b){
+            if (a.points > b.points) {
+              return -1;
+            }
+            if (a.points < b.points) {
+              return 1;
+            }
+            return 0;
+          }) });
         }
       }
     }  
