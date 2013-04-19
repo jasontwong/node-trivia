@@ -31,6 +31,15 @@ var fs = require('fs');
 app.listen(8080);
 
 io.sockets.on('connection', function (socket) {
+  var curr_q_ans = false,
+    qanda = [
+      { question: '1 + 1?', answer: 2 },
+      { question: '2 + 1?', answer: 3 },
+      { question: '3 + 1?', answer: 4 },
+      { question: '4 + 1?', answer: 5 },
+      { question: '5 + 1?', answer: 6 }
+    ],
+    q_index = 0;
   socket.on('join', function(data) {
     var user = get_valid_user(data.user);
     users[user] = {
@@ -38,4 +47,20 @@ io.sockets.on('connection', function (socket) {
     };
     socket.emit('let in', { user: user });
   });
+  socket.on('answer', function(data) {
+    if (!curr_q_ans && data.hasOwnProperty('answer') && data.hasOwnProperty('user')) {
+      var user = data.user;
+      if (qanda[q_index].answer === parseInt(data.answer, 10)) {
+        if (users.hasOwnProperty(user)) {
+          curr_q_ans = true;
+          socket.emit('update_points', { user: user, points: ++users[user].points, msg: "You're too slow" });
+        }
+      }
+    }  
+  });
+  setInterval(function() {
+    curr_q_ans = false;
+    q_index = Math.floor(Math.random() * qanda.length);
+    socket.emit('question', { question: qanda[q_index].question });
+  }, 10000);
 });
