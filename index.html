@@ -10,6 +10,14 @@
         login = $('#login'),
         game = $('#game'),
         user = { name: '', points: 0 };
+        game
+          .on({
+            update_points: function(e) {
+              if (e.hasOwnProperty('points')) {
+                $('h1', this).text(user.name + ' - ' + e.points + ' points');
+              }
+            }
+          });
         $('form', login)
           .on({
             submit: function(e) {
@@ -26,14 +34,17 @@
             var game_form = $('form', game);
             user.name = data.user;
             login.hide();
-            $('h1', game).text(user.name + ' - ' + user.points + ' points');
             game.show();
+            game.trigger({
+              type: 'update_points',
+              points: user.points
+            });
             game_form
               .on({
                 submit: function(e) {
                   e.preventDefault();
                   var input = $('input', this);
-                  socket.emit('answer', { answer: input.val() });
+                  socket.emit('answer', { answer: input.val(), user: user.name });
                   $(this).hide();
                   input.remove();
                   return false;
@@ -42,8 +53,28 @@
             socket.on('question', function(data) {
               if (data.hasOwnProperty('question')) {
                 $('.question span', game).text(data.question);
-                game_form.append('<input type="text" />');
+                $('input', game_form).remove();
+                $('.message', game).text();
+                game_form
+                  .prepend($('<input type="text" />'))
+                  .show();
               }
+            });
+            socket.on('update_points', function(data) {
+              var message = '';
+              if (data.hasOwnProperty('msg')) {
+                message = data.msg;
+              }
+              if (data.hasOwnProperty('user') && data.hasOwnProperty('points')) {
+                if (user.name === data.user) {
+                  game.trigger({
+                    type: 'update_points',
+                    points: data.points 
+                  });
+                } else {
+                  $('.message', game).text(message);
+                }
+              }             
             });
           }
         });
@@ -64,6 +95,7 @@
       <form action="/" method="post" style="display: none;">
         <button>Answer</button>
       </form>
+      <p class="message"></p>
     </div>
   </body>
 </html>
