@@ -35,11 +35,29 @@ var fs = require('fs');
     } else {
       return new_user;
     }
+  },
+  update_leaderboards = function() {
+    var new_users = [], i;
+    for (i in users) {
+      if (users.hasOwnProperty(i)) {
+        new_users.push({ name: i, points: users[i].points });
+      }
+    }
+    io.sockets.emit('leaderboards', { users: new_users.sort(function(a, b){
+      if (a.points > b.points) {
+        return -1;
+      }
+      if (a.points < b.points) {
+        return 1;
+      }
+      return 0;
+    }) });
   };
 
 app.listen(8080);
 
 io.sockets.on('connection', function (socket) {
+  update_leaderboards();
   socket.on('join', function(data) {
     if (data.hasOwnProperty('user')) {
       var user = data.user;
@@ -56,30 +74,16 @@ io.sockets.on('connection', function (socket) {
       points: 0
     };
     socket.emit('let in', { user: { name: user, points: 0 }});
+    update_leaderboards();
   });
   socket.on('answer', function(data) {
     if (!curr_q_ans && data.hasOwnProperty('answer') && data.hasOwnProperty('user')) {
-      var user = data.user,
-        new_users = [],
-        i;
+      var user = data.user;
       if (qanda[q_index].answer === parseInt(data.answer, 10)) {
         if (users.hasOwnProperty(user)) {
           curr_q_ans = true;
           socket.emit('update_points', { user: user, points: ++users[user].points, msg: "You're too slow" });
-          for (i in users) {
-            if (users.hasOwnProperty(i)) {
-              new_users.push({ name: i, points: users[i].points });
-            }
-          }
-          io.sockets.emit('leaderboards', { users: new_users.sort(function(a, b){
-            if (a.points > b.points) {
-              return -1;
-            }
-            if (a.points < b.points) {
-              return 1;
-            }
-            return 0;
-          }) });
+          update_leaderboards();
         }
       }
     }  
