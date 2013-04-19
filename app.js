@@ -1,4 +1,13 @@
 var fs = require('fs');
+  curr_q_ans = false,
+  qanda = [
+    { question: '1 + 1?', answer: 2 },
+    { question: '2 + 1?', answer: 3 },
+    { question: '3 + 1?', answer: 4 },
+    { question: '4 + 1?', answer: 5 },
+    { question: '5 + 1?', answer: 6 }
+  ],
+  q_index = 0,
   users = {},
   handler = function (req, res) {
     fs.readFile(__dirname + '/index.html', function (err, data) {
@@ -31,15 +40,6 @@ var fs = require('fs');
 app.listen(8080);
 
 io.sockets.on('connection', function (socket) {
-  var curr_q_ans = false,
-    qanda = [
-      { question: '1 + 1?', answer: 2 },
-      { question: '2 + 1?', answer: 3 },
-      { question: '3 + 1?', answer: 4 },
-      { question: '4 + 1?', answer: 5 },
-      { question: '5 + 1?', answer: 6 }
-    ],
-    q_index = 0;
   socket.on('join', function(data) {
     if (data.hasOwnProperty('user')) {
       var user = data.user;
@@ -68,9 +68,10 @@ io.sockets.on('connection', function (socket) {
       }
     }  
   });
-  setInterval(function() {
-    curr_q_ans = false;
-    q_index = Math.floor(Math.random() * qanda.length);
-    socket.emit('question', { question: qanda[q_index].question });
-  }, 10000);
 });
+
+setInterval(function() {
+  curr_q_ans = false;
+  q_index = Math.floor(Math.random() * qanda.length);
+  io.sockets.emit('question', { question: qanda[q_index].question });
+}, 10000);
