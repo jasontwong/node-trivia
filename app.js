@@ -1,4 +1,5 @@
 var fs = require('fs');
+  chats = [],
   curr_q_ans = false,
   qanda = [
     { question: '1 + 1?', answer: 2 },
@@ -63,6 +64,7 @@ io.sockets.on('connection', function (socket) {
       var user = data.user;
       if (users.hasOwnProperty(user)) {
         socket.emit('let in', { user: { name: user, points: users[user].points }});
+        io.sockets.emit('chat update', { log: chats });
       } else {
         socket.emit('no let in', {});
       }
@@ -75,6 +77,7 @@ io.sockets.on('connection', function (socket) {
     };
     socket.emit('let in', { user: { name: user, points: 0 }});
     update_leaderboards();
+    io.sockets.emit('chat update', { log: chats });
   });
   socket.on('answer', function(data) {
     if (!curr_q_ans && data.hasOwnProperty('answer') && data.hasOwnProperty('user')) {
@@ -87,6 +90,13 @@ io.sockets.on('connection', function (socket) {
         }
       }
     }  
+  });
+  socket.on('chat send', function(data) {
+    if (data.hasOwnProperty('text') && data.hasOwnProperty('user')) {
+      var line = '[' + data.user + ']: ' + data.text;
+      chats.push(line);
+      io.sockets.emit('chat update', { line: line });
+    }
   });
 });
 
